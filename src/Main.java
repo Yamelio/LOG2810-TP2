@@ -1,3 +1,4 @@
+import javafx.util.Pair;
 import struct.Node;
 
 import javax.swing.*;
@@ -8,14 +9,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.*;
 import java.util.List;
-import java.util.Scanner;
 
 public class Main {
 
+    private static Map<String, Integer> labels = new HashMap<>();
+    private static List<String> history = new LinkedList<>();
     private static JFrame frame;
     private static JTextField input;
-    private static JTextArea output;
+    private static JTextArea textarea;
+    private static JTextArea historyarea;
+    private static JScrollPane output;
     private static String GRAPHPATH = "lexique6.txt";
     private static Node nodeinit;
     //private static Scanner sc;
@@ -30,19 +35,18 @@ public class Main {
             e.printStackTrace();
         }
 
-        //System.out.println(nodeinit);
-        List<String> autocompleteTest = autoComplete("syl");
-        for(String s : autocompleteTest){
-            System.out.println(s);
-        }
+        System.out.println(nodeinit);
 
         frame = new JFrame("Bonjour");
-        frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(),BoxLayout.PAGE_AXIS));
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setSize(500,500);
         input = new JTextField();
-        output = new JTextArea();
-        output.setEditable(false);
+        input.setMaximumSize(new Dimension(500,50));
+        textarea = new JTextArea();
+        textarea.setEditable(false);
+        output = new JScrollPane(textarea);
+        historyarea = new JTextArea();
+        historyarea.setEditable(false);
         input.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -57,33 +61,65 @@ public class Main {
             @Override
             public void keyReleased(KeyEvent e) {
                 List<String> content = autoComplete(input.getText());
-                String txt = "";
+                String txt;
                 if(content != null){
-                    for(String s : content){
-                        txt += s + "\n";
+                    if(content.size() == 1 || nodeinit.contains(input.getText())){
+                        if(content.size() == 1)
+                            txt = content.get(0);
+                        else
+                            txt = input.getText();
+                        if(!history.isEmpty()){
+                            if(!history.get(history.size()-1).equals(txt)) {
+                                if (history.size() >= 5) {
+                                    history.remove(0);
+                                }
+                                history.remove(txt);
+                                history.add(txt);
+                                labels.put(txt, labels.get(txt) + 1);
+                                updateHistoryArea();
+                            }
+                        }
+                        else{
+                            history.add(txt);
+                            labels.put(txt, labels.get(txt) + 1);
+                            updateHistoryArea();
+                        }
+
+
                     }
-                    output.setText(txt);
+                    txt="";
+                    for (String s : content) {
+                        txt += s +" | "+ labels.get(s) + "\n";
+                    }
+                    textarea.setText(txt);
                 }
                 else{
-                    output.setText("Rien n'a ete trouve");
+                    textarea.setText("Rien n'a ete trouve");
                 }
             }
         });
-        frame.add(input);
-        frame.add(output);
+        frame.add(input,BorderLayout.PAGE_START);
+        frame.add(output,BorderLayout.CENTER);
+        frame.add(historyarea,BorderLayout.PAGE_END);
         frame.setVisible(true);
+    }
 
+    private static void updateHistoryArea() {
+        String res = "";
+        for(String s : history){
+            res += s + " x" + labels.get(s) + " / ";
+        }
+        historyarea.setText(res);
     }
 
     private static Node creerAutomate() throws FileNotFoundException{
 
         Scanner sc = new Scanner(new File(GRAPHPATH), "ISO-8859-1");
-        System.out.println(sc.hasNext());
-
         Node res = new Node(false);
         String line = "";
         while(sc.hasNextLine()){
             line = sc.nextLine();
+            labels.put(line,0);
             res.addVoisin(line);
         }
         return res;
@@ -92,5 +128,8 @@ public class Main {
     private static List<String> autoComplete(String s){
         return nodeinit.autocomplete(s);
     }
+
+
+
 
 }
