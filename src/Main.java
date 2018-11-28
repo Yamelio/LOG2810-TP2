@@ -36,6 +36,7 @@ public class Main {
         }
 
         System.out.println(nodeinit);
+        System.out.println("NOMBRE NODES : "+Node.cpt);
 
         frame = new JFrame("Bonjour");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

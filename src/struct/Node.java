@@ -6,14 +6,17 @@ public class Node {
 
     private Map<Character,Node> voisins;
     private boolean isFinal;
+    public static int cpt = 0;
 
     public Node(){
         voisins = new HashMap<>();
+        cpt++;
     }
 
     public Node(boolean isFinal){
         this.isFinal = isFinal;
         voisins = new HashMap<>();
+        cpt++;
     }
 
     public Map<Character, Node> getVoisins() {
@@ -41,7 +44,7 @@ public class Node {
             voisins.put(firstChar,toAdd);
         }
         else if(voisins.keySet().contains(firstChar)){
-            voisins.get(firstChar).addVoisin(word.substring(1));
+                voisins.get(firstChar).addVoisin(word.substring(1));
         }
         else{
             Node toAdd = new Node(false);
@@ -71,6 +74,13 @@ public class Node {
         return res;
     }
 
+    /***
+     * Appel publique a la methode autocomplete.
+     * Il est necessaire pour préparer la recherche de mots de parcourir le graphe jusqu'a l'etat correspondant au mot de départ.
+     * Cette methode initialise cette recherche
+     * @param start correspond au mot a completer
+     * @return la liste des mots disponibles a partir du mot de depart
+     */
     public List<String> autocomplete(String start) {
         try {
             return autocomplete(start, start);
@@ -81,6 +91,13 @@ public class Node {
     }
 
 
+    /***
+     * Methode privee d'autocomplete.
+     * Permet de se rendre a l'etat correspondant au mot de depart
+     * @param start rappel de la chaine de depart necessaire pour l'appel a getWords(start)
+     * @param s chaine correspondant au node actuellement visite
+     * @return la liste de mots disponibles a partir du mot de depart (appel recursif jusqu'au bon node)
+     */
     private List<String> autocomplete(String start, String s) {
 
         if(s.equals("")){
@@ -93,6 +110,13 @@ public class Node {
     }
 
 
+    /***
+     * Renvoie recursivement la liste des mots disponibles a partir du mot de depart
+     * On recupere les voisins directs, et on appelle recursivement sur les autres voisins
+     * Le LinkedHashSet évite les doublons
+     * @param depart Mot du node actuel a completer
+     * @return La liste des mots completables avec les voisins.
+     */
     private Set<String> getWords(String depart){
         Set<String> res = new LinkedHashSet<>();
 
@@ -101,9 +125,11 @@ public class Node {
         }
 
         for(char s : voisins.keySet()){
+
             if(voisins.get(s).isFinal){
                 res.add(depart+s);
             }
+
             if(!voisins.get(s).getVoisins().isEmpty())
                 res.addAll(voisins.get(s).getWords(depart+s));
 
